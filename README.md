@@ -1,4 +1,4 @@
-git clone https://github.com/advpyt/advanced-python-env.git
+git clone https://github.com/advpyt/advanced-python-env.git \n
 cd advanced-python-env
 
 python -m venv .venv
