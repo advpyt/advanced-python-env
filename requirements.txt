@@ -1,0 +1,2 @@
+# Required packages for running the Library Management System
+Django>=4.2,<5.0

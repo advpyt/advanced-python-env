@@ -1,0 +1,64 @@
+{#
+  Book list page for the Library Management System.
+
+  Displays all books in the catalog and allows filtering by category.
+  Shows the number of available copies for each book and links to the
+  book detail page.
+#}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Library Catalog</title>
+    <style>
+        body { font-family: sans-serif; margin: 2em; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { padding: 0.5em; border-bottom: 1px solid #ccc; text-align: left; }
+        form { margin-bottom: 1em; }
+    </style>
+</head>
+<body>
+    <h1>Library Catalog</h1>
+
+    <form method="get">
+        <label for="category">Category:</label>
+        <select name="category" id="category" onchange="this.form.submit()">
+            <option value="">All</option>
+            {% for c in categories %}
+                <option value="{{ c.id }}"{% if selected_category == c.id|stringformat:'s' %} selected{% endif %}>
+                    {{ c.name }}
+                </option>
+            {% endfor %}
+        </select>
+        <noscript><button type="submit">Filter</button></noscript>
+    </form>
+
+    {% if books %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Author</th>
+                    <th>Category</th>
+                    <th>Available</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for book in books %}
+                    <tr>
+                        <td><a href="{% url 'library:book_detail' book.id %}">{{ book.title }}</a></td>
+                        <td>{{ book.author }}</td>
+                        <td>{{ book.category.name }}</td>
+                        <td>{{ book.available_copies }}/{{ book.total_copies }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No books in the catalog.</p>
+    {% endif %}
+
+    <p><a href="{% url 'library:my_history' %}">My borrowing history</a></p>
+</body>
+</html>

@@ -1,0 +1,23 @@
+{#
+  Error page for the Library application.
+
+  Displays an error message and provides a link back to the catalog. This
+  template is used when borrow or return operations cannot be completed.
+#}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Error</title>
+    <style>
+        body { font-family: sans-serif; margin: 2em; color: #a00; }
+        a { color: #06c; }
+    </style>
+</head>
+<body>
+    <h1>Error</h1>
+    <p>{{ message }}</p>
+    <p><a href="{% url 'library:book_list' %}">Back to catalog</a></p>
+</body>
+</html>
