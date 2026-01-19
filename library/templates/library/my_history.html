@@ -1,71 +1,54 @@
-{#
-  Borrowing history page for the logged-in user.
 
-  Lists each borrow record with information about the book, the dates and
-  the status. Active borrows can be returned via a button.
-#}
+{% extends 'library/base.html' %}
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>My Borrowing History</title>
-    <style>
-        body { font-family: sans-serif; margin: 2em; }
-        table { border-collapse: collapse; width: 100%; }
-        th, td { padding: 0.5em; border-bottom: 1px solid #ccc; text-align: left; }
-        button { padding: 0.3em 0.6em; font-size: 0.9rem; }
-        .overdue { color: red; font-weight: bold; }
-    </style>
-</head>
-<body>
-    <h1>My Borrowing History</h1>
+{% block title %}My Borrowing History{% endblock %}
 
-    {% if borrows %}
-        <table>
-            <thead>
+{% block content %}
+<h1>My Borrowing History</h1>
+
+{% if borrows %}
+    <table class="history-table">
+        <thead>
+            <tr>
+                <th>Book</th>
+                <th>Borrowed</th>
+                <th>Due</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for br in borrows %}
                 <tr>
-                    <th>Book</th>
-                    <th>Borrowed</th>
-                    <th>Due</th>
-                    <th>Status</th>
-                    <th>Action</th>
+                    <td>{{ br.book.title }}</td>
+                    <td>{{ br.borrowed_at|date:"Y-m-d H:i" }}</td>
+                    <td>{{ br.due_date|date:"Y-m-d H:i" }}</td>
+                    <td>
+                        {% if br.returned_at %}
+                            Returned ({{ br.returned_at|date:"Y-m-d H:i" }})
+                        {% else %}
+                            Active
+                            {% if br.is_overdue %}
+                                <span class="overdue">OVERDUE</span>
+                            {% endif %}
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if not br.returned_at %}
+                            <form method="post" action="{% url 'library:return_book' br.id %}">
+                                {% csrf_token %}
+                                <button type="submit">Return</button>
+                            </form>
+                        {% else %}
+                            &mdash;
+                        {% endif %}
+                    </td>
                 </tr>
-            </thead>
-            <tbody>
-                {% for br in borrows %}
-                    <tr>
-                        <td>{{ br.book.title }}</td>
-                        <td>{{ br.borrowed_at|date:"Y-m-d H:i" }}</td>
-                        <td>{{ br.due_date|date:"Y-m-d H:i" }}</td>
-                        <td>
-                            {% if br.returned_at %}
-                                Returned ({{ br.returned_at|date:"Y-m-d H:i" }})
-                            {% else %}
-                                Active
-                                {% if br.is_overdue %}
-                                    <span class="overdue">OVERDUE</span>
-                                {% endif %}
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if not br.returned_at %}
-                                <form method="post" action="{% url 'library:return_book' br.id %}">
-                                    {% csrf_token %}
-                                    <button type="submit">Return</button>
-                                </form>
-                            {% else %}
-                                &mdash;
-                            {% endif %}
-                        </td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <p>You have not borrowed any books yet.</p>
-    {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+    <p>You have not borrowed any books yet.</p>
+{% endif %}
 
-    <p><a href="{% url 'library:book_list' %}">Back to catalog</a></p>
-</body>
-</html>
+{% endblock %}

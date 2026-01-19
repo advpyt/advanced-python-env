@@ -20,6 +20,10 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.db import transaction
 from .models import Book, Category, Borrow
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
+from django.views.decorators.csrf import csrf_exempt
+import json
 
 
 def book_list(request):
@@ -110,3 +114,67 @@ def my_history(request):
         .order_by("-borrowed_at")
     )
     return render(request, "library/my_history.html", {"borrows": borrows})
+
+
+# API endpoint to list and create books
+@require_http_methods(["GET", "POST"])
+@csrf_exempt
+def api_books(request):
+    """
+    API endpoint that supports GET and POST operations on books.
+
+    * GET: returns a list of books with their basic details in JSON format.
+    * POST: accepts JSON payload to create a new book. Required fields are
+      `title`, `author` and `category_id`. Optional field `total_copies` defaults to 1.
+    """
+    if request.method == "GET":
+        books = Book.objects.select_related("category").all()
+        data = [
+            {
+                "id": book.id,
+                "title": book.title,
+                "author": book.author,
+                "category": book.category.name,
+                "total_copies": book.total_copies,
+                "available_copies": book.available_copies,
+            }
+            for book in books
+        ]
+        return JsonResponse(data, safe=False)
+
+    # POST request: create a new book
+    try:
+        payload = json.loads(request.body.decode("utf-8"))
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON body"}, status=400)
+
+    title = payload.get("title")
+    author = payload.get("author")
+    category_id = payload.get("category_id")
+    total_copies = payload.get("total_copies", 1)
+    if not title or not author or not category_id:
+        return JsonResponse(
+            {
+                "error": "Missing required fields: title, author and category_id must be provided"
+            },
+            status=400,
+        )
+    try:
+        category = Category.objects.get(pk=category_id)
+    except Category.DoesNotExist:
+        return JsonResponse({"error": "Category not found"}, status=404)
+    # Create the book
+    book = Book.objects.create(
+        title=title,
+        author=author,
+        category=category,
+        total_copies=total_copies,
+        available_copies=total_copies,
+    )
+    return JsonResponse(
+        {
+            "id": book.id,
+            "message": "Book created successfully",
+        },
+        status=201,
+    )

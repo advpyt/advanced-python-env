@@ -1,0 +1,33 @@
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Library Management System{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <header>
+        <nav>
+            <ul>
+                <li><a href="{% url 'library:book_list' %}">Catalog</a></li>
+                {% if user.is_authenticated %}
+                    <li><a href="{% url 'library:my_history' %}">My History</a></li>
+                    <li><a href="/admin/">Admin</a></li>
+                {% else %}
+                    <li><a href="/admin/login/">Login</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <p>&copy; {{ now|date:"Y" }} Library Management System</p>
+    </footer>
+</body>
+</html>
