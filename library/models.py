@@ -50,6 +50,18 @@ class Book(models.Model):
         """Return True if there is at least one available copy."""
         return self.available_copies > 0
 
+    @property
+    def borrowed_copies(self) -> int:
+        """
+        Return the number of copies currently borrowed.
+
+        This convenience property calculates the difference between the
+        total number of copies and the number of copies still available.
+        It is useful when adjusting ``total_copies`` to ensure the library
+        does not set the total lower than the number of active loans.
+        """
+        return self.total_copies - self.available_copies
+
 
 class Borrow(models.Model):
     """Represents a record of a user borrowing a book."""
