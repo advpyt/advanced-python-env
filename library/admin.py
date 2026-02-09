@@ -28,6 +28,7 @@ class BookAdmin(admin.ModelAdmin):
     )
     list_filter = ("category",)
     search_fields = ("title", "author")
+    list_per_page = 25
 
 
 @admin.register(Borrow)
@@ -35,3 +36,4 @@ class BorrowAdmin(admin.ModelAdmin):
     list_display = ("borrower", "book", "borrowed_at", "due_date", "returned_at")
     list_filter = ("returned_at",)
     search_fields = ("borrower__username", "book__title")
+    date_hierarchy = "borrowed_at"
