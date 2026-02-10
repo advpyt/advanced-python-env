@@ -19,4 +19,6 @@ urlpatterns: list = [
     path("my-history/", views.my_history, name="my_history"),
     # API endpoint for books
     path("api/books/", views.api_books, name="api_books"),
+    # API endpoint for single book operations (GET, PUT, DELETE)
+    path("api/books/<int:pk>/", views.api_book_detail, name="api_book_detail"),
 ]

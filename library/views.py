@@ -76,7 +76,7 @@ def borrow_book(request, pk: int):
     book.available_copies -= 1
     book.save(update_fields=["available_copies"])
 
-    return redirect("library:my_history")
+    return redirect("my_history")
 
 
 @login_required
@@ -84,11 +84,11 @@ def borrow_book(request, pk: int):
 def return_book(request, borrow_id: int):
     """Handle returning a borrowed book by the logged-in user."""
     if request.method != "POST":
-        return redirect("library:my_history")
+        return redirect("my_history")
 
     borrow = get_object_or_404(Borrow, pk=borrow_id, borrower=request.user)
     if borrow.returned_at is not None:
-        return redirect("library:my_history")
+        return redirect("my_history")
 
     # Lock the associated book row
     book = Book.objects.select_for_update().get(pk=borrow.book_id)
@@ -102,7 +102,7 @@ def return_book(request, borrow_id: int):
         book.available_copies = book.total_copies
     book.save(update_fields=["available_copies"])
 
-    return redirect("library:my_history")
+    return redirect("my_history")
 
 
 @login_required
@@ -127,6 +127,7 @@ def api_books(request):
     * POST: accepts JSON payload to create a new book. Required fields are
       `title`, `author` and `category_id`. Optional field `total_copies` defaults to 1.
     """
+    # GET request: return all books
     if request.method == "GET":
         books = Book.objects.select_related("category").all()
         data = [
@@ -152,6 +153,7 @@ def api_books(request):
     author = payload.get("author")
     category_id = payload.get("category_id")
     total_copies = payload.get("total_copies", 1)
+    # Validate required fields
     if not title or not author or not category_id:
         return JsonResponse(
             {
@@ -178,3 +180,92 @@ def api_books(request):
         },
         status=201,
     )
+
+
+@require_http_methods(["GET", "PUT", "DELETE"])
+@csrf_exempt
+def api_book_detail(request, pk: int):
+    """
+    API endpoint to retrieve, update or delete a single book.
+
+    * GET: return details for the specified book.
+    * PUT: update a book's details using JSON payload. Supports updating
+      `title`, `author`, `category_id`, and `total_copies`. When total_copies
+      is reduced below the number of currently borrowed copies, the change is
+      rejected.
+    * DELETE: remove the book from the database if no copies are currently
+      borrowed.
+    """
+    try:
+        book = Book.objects.select_related("category").get(pk=pk)
+    except Book.DoesNotExist:
+        return JsonResponse({"error": "Book not found"}, status=404)
+
+    # GET request: return the book details
+    if request.method == "GET":
+        data = {
+            "id": book.id,
+            "title": book.title,
+            "author": book.author,
+            "category": book.category.name,
+            "category_id": book.category.id,
+            "total_copies": book.total_copies,
+            "available_copies": book.available_copies,
+        }
+        return JsonResponse(data)
+
+    # PUT request: update book details
+    if request.method == "PUT":
+        try:
+            payload = json.loads(request.body.decode("utf-8"))
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON body"}, status=400)
+        # Update simple string fields
+        title = payload.get("title")
+        author = payload.get("author")
+        category_id = payload.get("category_id")
+        total_copies = payload.get("total_copies")
+        if title is not None:
+            book.title = title
+        if author is not None:
+            book.author = author
+        if category_id is not None:
+            try:
+                category = Category.objects.get(pk=category_id)
+            except Category.DoesNotExist:
+                return JsonResponse({"error": "Category not found"}, status=404)
+            book.category = category
+        if total_copies is not None:
+            # Cannot set total copies below the number of borrowed copies
+            borrowed_copies = book.total_copies - book.available_copies
+            if total_copies < borrowed_copies:
+                return JsonResponse(
+                    {
+                        "error": "total_copies cannot be less than the number of currently borrowed copies"
+                    },
+                    status=400,
+                )
+            # Adjust available_copies relative to change in total_copies
+            diff = total_copies - book.total_copies
+            book.total_copies = total_copies
+            book.available_copies += diff
+            # Ensure available_copies never negative
+            if book.available_copies < 0:
+                book.available_copies = 0
+        # Save updates
+        book.save()
+        return JsonResponse({"message": "Book updated successfully"})
+
+    # DELETE request: remove the book
+    if request.method == "DELETE":
+        # Only allow deletion if no copies are currently borrowed
+        borrowed_copies = book.total_copies - book.available_copies
+        if borrowed_copies > 0:
+            return JsonResponse(
+                {
+                    "error": "Cannot delete book while copies are borrowed"
+                },
+                status=400,
+            )
+        book.delete()
+        return JsonResponse({"message": "Book deleted successfully"}, status=204)
