@@ -76,7 +76,7 @@ def borrow_book(request, pk: int):
     book.available_copies -= 1
     book.save(update_fields=["available_copies"])
 
-    return redirect("my_history")
+    return redirect("library:my_history")
 
 
 @login_required
@@ -84,11 +84,11 @@ def borrow_book(request, pk: int):
 def return_book(request, borrow_id: int):
     """Handle returning a borrowed book by the logged-in user."""
     if request.method != "POST":
-        return redirect("my_history")
+        return redirect("library:my_history")
 
     borrow = get_object_or_404(Borrow, pk=borrow_id, borrower=request.user)
     if borrow.returned_at is not None:
-        return redirect("my_history")
+        return redirect("library:my_history")
 
     # Lock the associated book row
     book = Book.objects.select_for_update().get(pk=borrow.book_id)
@@ -102,7 +102,7 @@ def return_book(request, borrow_id: int):
         book.available_copies = book.total_copies
     book.save(update_fields=["available_copies"])
 
-    return redirect("my_history")
+    return redirect("library:my_history")
 
 
 @login_required
