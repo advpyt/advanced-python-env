@@ -16,7 +16,7 @@ urlpatterns: list = [
     path("books/<int:pk>/", views.book_detail, name="book_detail"),
     path("books/<int:pk>/borrow/", views.borrow_book, name="borrow_book"),
     path("borrows/<int:borrow_id>/return/", views.return_book, name="return_book"),
-    path("my-history/", views.my_history, name="my_history"),
+    path("library:my-history/", views.my_history, name="library:my_history"),
     # API endpoint for books
     path("api/books/", views.api_books, name="api_books"),
     # API endpoint for single book operations (GET, PUT, DELETE)
