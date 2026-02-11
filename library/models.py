@@ -40,6 +40,16 @@ class Book(models.Model):
     total_copies = models.PositiveIntegerField(default=1)
     available_copies = models.PositiveIntegerField(default=1)
 
+    # Optional cover image for the book.  When provided, this image will be displayed
+    # in the catalog and book detail pages.  Images are uploaded to the
+    # ``book_covers`` directory within ``MEDIA_ROOT``.  The field is
+    # marked as optional so existing records remain valid without requiring an
+    # image.  When no image is uploaded, a default placeholder image is used
+    # in templates via the ``static`` files system.
+    cover_image = models.ImageField(
+        upload_to="book_covers/", blank=True, null=True
+    )
+
     class Meta:
         ordering = ["title"]
 

@@ -1,13 +1,5 @@
-{#
-  Book list page for the Library Management System.
-
-  Displays all books in the catalog and allows filtering by category.
-  Shows the number of available copies for each book and links to the
-  book detail page.
-#}
-
 {% extends 'library/base.html' %}
-
+{% load static %}
 {% block title %}Library Catalog{% endblock %}
 
 {% block content %}
@@ -27,26 +19,22 @@
 </form>
 
 {% if books %}
-    <table class="catalog-table">
-        <thead>
-            <tr>
-                <th>Title</th>
-                <th>Author</th>
-                <th>Category</th>
-                <th>Available</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for book in books %}
-                <tr>
-                    <td><a href="{% url 'library:book_detail' book.id %}">{{ book.title }}</a></td>
-                    <td>{{ book.author }}</td>
-                    <td>{{ book.category.name }}</td>
-                    <td>{{ book.available_copies }}/{{ book.total_copies }}</td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="book-grid">
+        {% for book in books %}
+        <div class="book-card">
+            {% if book.cover_image %}
+                <img src="{{ book.cover_image.url }}" alt="{{ book.title }}">
+            {% else %}
+                <img src="{% static 'images/default_cover.png' %}" alt="{{ book.title }}">
+            {% endif %}
+            <h3><a href="{% url 'library:book_detail' book.id %}">{{ book.title }}</a></h3>
+            <p>Author: {{ book.author }}</p>
+            <p>Category: {{ book.category.name }}</p>
+            <p>Available: {{ book.available_copies }}/{{ book.total_copies }}</p>
+            <a class="button" href="{% url 'library:book_detail' book.id %}">View Details</a>
+        </div>
+        {% endfor %}
+    </div>
 {% else %}
     <p>No books in the catalog.</p>
 {% endif %}

@@ -1,10 +1,3 @@
-{#
-  Base template for the Library Management System.
-
-  Provides a common layout with a header and footer, and loads static CSS
-  resources. Child templates extend this template and fill the content
-  block.
-#}
 
 {% load static %}
 <!DOCTYPE html>
@@ -16,16 +9,20 @@
 </head>
 <body>
     <header>
-        <nav>
-            <ul>
-                <li><a href="{% url 'library:book_list' %}">Catalog</a></li>
-                {% if user.is_authenticated %}
-                    <li><a href="{% url 'library:my_history' %}">My History</a></li>
-                    <li><a href="/admin/">Admin</a></li>
-                {% else %}
-                    <li><a href="/admin/login/">Login</a></li>
-                {% endif %}
-            </ul>
+        <nav class="navbar">
+            <div class="container">
+                <a class="navbar-brand" href="{% url 'library:book_list' %}">Library</a>
+                <ul class="nav-links">
+                    {% if user.is_authenticated %}
+                        <li>Welcome, {{ user.username }}</li>
+                        <li><a href="{% url 'library:my_history' %}">My History</a></li>
+                        <li><a href="{% url 'library:logout' %}">Logout</a></li>
+                    {% else %}
+                        <li><a href="{% url 'library:login' %}">Login</a></li>
+                        <li><a href="{% url 'library:register' %}">Register</a></li>
+                    {% endif %}
+                </ul>
+            </div>
         </nav>
     </header>
 

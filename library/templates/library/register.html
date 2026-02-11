@@ -1,0 +1,23 @@
+{% extends "library/base.html" %}
+{% load static %}
+
+{% block title %}Register{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <h2>Register</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        {% for field in form %}
+        <div class="form-group">
+            {{ field.label_tag }}
+            {{ field }}
+            {{ field.errors }}
+        </div>
+        {% endfor %}
+        <button type="submit">Register</button>
+    </form>
+    <p style="text-align:center; margin-top:1rem;">Already have an account? <a href="{% url 'library:login' %}">Login here</a>.</p>
+</div>
+{% endblock %}

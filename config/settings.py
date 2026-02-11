@@ -1,12 +1,3 @@
-"""
-Django settings for the Library Management System project.
-
-This configuration file defines the core settings required to run the Django
-application. It uses a SQLite database for simplicity and enables the
-built‑in Django apps necessary for authentication, sessions, static file
-management and administration. The timezone is set to Asia/Almaty to match
-the user's locale.
-"""
 
 from pathlib import Path
 
@@ -108,5 +99,14 @@ STATIC_URL: str = "static/"
 STATICFILES_DIRS: list[Path] = [
     BASE_DIR / "static",
 ]
+
+# Media files (uploaded by users) configuration.  ``MEDIA_URL`` defines the
+# base URL under which media files are served, and ``MEDIA_ROOT`` points to
+# the directory where uploaded files are stored.  In development, this
+# directory will be served via ``django.conf.urls.static.static`` in
+# ``config/urls.py``.  In production you should configure your web server
+# accordingly.
+MEDIA_URL: str = "media/"
+MEDIA_ROOT: Path = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD: str = "django.db.models.BigAutoField"

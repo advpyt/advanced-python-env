@@ -1,21 +1,10 @@
-"""
-View functions for the Library Management System.
 
-These functions implement the core user interactions:
- - Displaying a list of books, optionally filtered by category.
- - Showing details of a single book.
- - Borrowing a book (logged-in users only).
- - Returning a borrowed book.
- - Viewing the borrowing history of the logged-in user.
-
-The use of `@login_required` ensures that only authenticated users can
-borrow or return books and view their history. Transactions are used
-around borrow/return operations to ensure copy counts remain consistent.
-"""
 
 from __future__ import annotations
 
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth import login as auth_login
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.db import transaction
@@ -269,3 +258,52 @@ def api_book_detail(request, pk: int):
             )
         book.delete()
         return JsonResponse({"message": "Book deleted successfully"}, status=204)
+
+
+# ---------------------------------------------------------------------------
+# Authentication views
+#
+# The following views provide simple registration and login pages that do not
+# require the Django admin.  Users can create an account and sign in via
+# the provided templates (see ``templates/library/register.html`` and
+# ``templates/library/login.html``).  After successful registration or
+# login, users are redirected to the main book list.
+
+def register(request):
+    """Register a new user.
+
+    If the request is POST and the form is valid, a new user is created
+    and automatically logged in.  The user is then redirected to the
+    catalog page.  For GET requests, an empty ``UserCreationForm`` is
+    presented.
+    """
+    if request.method == "POST":
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            # Log the new user in immediately after registration
+            auth_login(request, user)
+            return redirect("library:book_list")
+    else:
+        form = UserCreationForm()
+    return render(request, "library/register.html", {"form": form})
+
+
+def login_view(request):
+    """Authenticate an existing user.
+
+    Presents a login form.  If the user is already authenticated they
+    are redirected to the catalog.  On POST, the form is validated and
+    the user logged in; otherwise, the form with errors is re‑rendered.
+    """
+    if request.user.is_authenticated:
+        return redirect("library:book_list")
+    if request.method == "POST":
+        form = AuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            auth_login(request, user)
+            return redirect("library:book_list")
+    else:
+        form = AuthenticationForm()
+    return render(request, "library/login.html", {"form": form})

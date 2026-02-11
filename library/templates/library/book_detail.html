@@ -1,32 +1,33 @@
-{#
-  Detail page for a single book.
-
-  Shows information about the book and provides a button to borrow it if
-  copies are available and the user is authenticated.
-#}
 
 {% extends 'library/base.html' %}
-
+{% load static %}
 {% block title %}{{ book.title }}{% endblock %}
 
 {% block content %}
-<h1>{{ book.title }}</h1>
-<p><strong>Author:</strong> {{ book.author }}</p>
-<p><strong>Category:</strong> {{ book.category.name }}</p>
-<p><strong>Available:</strong> {{ book.available_copies }}/{{ book.total_copies }}</p>
-
-{% if user.is_authenticated %}
-    {% if book.available_copies > 0 %}
-        <form method="post" action="{% url 'library:borrow_book' book.id %}">
-            {% csrf_token %}
-            <button type="submit">Borrow</button>
-        </form>
+<div class="book-detail">
+    {% if book.cover_image %}
+        <img src="{{ book.cover_image.url }}" alt="{{ book.title }}">
     {% else %}
-        <p><strong>No copies available.</strong></p>
+        <img src="{% static 'images/default_cover.png' %}" alt="{{ book.title }}">
     {% endif %}
-{% else %}
-    <p>Please log in via the admin panel to borrow this book.</p>
-{% endif %}
-
-<p><a href="{% url 'library:book_list' %}">Back to catalog</a></p>
+    <div class="book-detail-info">
+        <h2>{{ book.title }}</h2>
+        <p><strong>Author:</strong> {{ book.author }}</p>
+        <p><strong>Category:</strong> {{ book.category.name }}</p>
+        <p><strong>Available:</strong> {{ book.available_copies }}/{{ book.total_copies }}</p>
+        {% if user.is_authenticated %}
+            {% if book.available_copies > 0 %}
+                <form method="post" action="{% url 'library:borrow_book' book.id %}">
+                    {% csrf_token %}
+                    <button type="submit">Borrow</button>
+                </form>
+            {% else %}
+                <p><strong>No copies available.</strong></p>
+            {% endif %}
+        {% else %}
+            <p>Please <a href="{% url 'library:login' %}">log in</a> to borrow this book.</p>
+        {% endif %}
+        <p style="margin-top:1rem;"><a href="{% url 'library:book_list' %}">Back to catalog</a></p>
+    </div>
+</div>
 {% endblock %}

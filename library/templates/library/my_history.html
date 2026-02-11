@@ -1,12 +1,6 @@
-{#
-  Borrowing history page for the logged-in user.
-
-  Lists each borrow record with information about the book, the dates and
-  the status. Active borrows can be returned via a button.
-#}
 
 {% extends 'library/base.html' %}
-
+{% load static %}
 {% block title %}My Borrowing History{% endblock %}
 
 {% block content %}
